@@ -1,7 +1,7 @@
 /*****************************************************
  * Site: https://rosettacode.org/wiki/Cholesky_decomposition
  *****************************************************/
-    
+
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
