@@ -1,0 +1,3 @@
+gcc -Wall cholesky.c -c -o cholesky.o
+gcc -Wall cholesky.o -o cholesky -lm
+./cholesky
