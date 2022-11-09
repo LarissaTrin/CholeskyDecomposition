@@ -8,9 +8,11 @@
 #include <assert.h>
 #include <sys/time.h>
 
-void cholesky(double** A, int n) {
+void cholesky(double **A, int n)
+{
   for (int i = 0; i < n; i++)
-    for (int j = 0; j < (i + 1); j++) {
+    for (int j = 0; j < (i + 1); j++)
+    {
       double s = 0;
       for (int k = 0; k < j; k++)
         s += A[i][k] * A[j][k];
@@ -18,104 +20,111 @@ void cholesky(double** A, int n) {
     }
 }
 
-void show_matrix(double** A, int n) {
-  FILE* file = fopen("cholesky.out", "w");
-  for (int i = 0; i < n; i++) {
+void show_matrix(double **A, int n)
+{
+  FILE *file = fopen("cholesky.out", "w");
+  for (int i = 0; i < n; i++)
+  {
     for (int j = 0; j < n; j++)
-        fprintf(file, "%2.5f ", A[i][j]);
+      fprintf(file, "%2.5f ", A[i][j]);
     fprintf(file, "\n");
   }
   fclose(file);
 }
 
-void mat_zero(double** x, int n) {
+void mat_zero(double **x, int n)
+{
   int i, j;
-  for(i=0; i<n; i++) {
-    for(j=0; j<n; j++) {
+  for (i = 0; i < n; i++)
+  {
+    for (j = 0; j < n; j++)
+    {
       x[i][j] = 0.0;
     }
   }
 }
- 
-double** mat_new(int n) {
+
+double **mat_new(int n)
+{
   int i;
-  double** x = malloc(sizeof(double*) * n);
+  double **x = malloc(sizeof(double *) * n);
   assert(x != NULL);
 
-  for(i = 0; i < n; i++){
-    x[i]  = malloc(sizeof(double) * n);
+  for (i = 0; i < n; i++)
+  {
+    x[i] = malloc(sizeof(double) * n);
     assert(x[i] != NULL);
   }
-  
-  mat_zero(x,n);
- 
+
+  mat_zero(x, n);
+
   return x;
 }
- 
-void mat_gen(FILE* file, double** s, int n) {
-  int i,j;
-  for(i=0; i<n; i++) {
-    for(j=0; j<n; j++) {
-      fscanf(file, "%lf",&s[i][j]);
+
+void mat_gen(FILE *file, double **s, int n)
+{
+  int i, j;
+  for (i = 0; i < n; i++)
+  {
+    for (j = 0; j < n; j++)
+    {
+      fscanf(file, "%lf", &s[i][j]);
     }
   }
 }
- 
-void mat_del(double** x) {
+
+void mat_del(double **x)
+{
   free(x[0]);
   free(x);
 }
- 
-int main() {
-  int i = 0;
-  while (i<10)
-  {  
-    printf("Iniciando execucao numero %d...\n",i+1);
 
-    double t_generate;
-    double t_solve;
-    double t_register;
+int main()
+{
+  printf("Iniciando execucao\n");
 
-    struct timeval tstart, tend;
+  double t_generate;
+  double t_solve;
+  double t_register;
 
-    int n;
+  struct timeval tstart, tend;
 
-    //---------------Generate Matrix----------------
-    gettimeofday(&tstart, NULL);
-    FILE* file = fopen("cholesky_2000.in", "r");
-    fscanf(file,"%d",&n);
+  int n;
 
-    double** A = mat_new(n);
-    mat_gen(file, A, n);
-    fclose(file);
-    gettimeofday(&tend, NULL);
+  //---------------Generate Matrix----------------
+  gettimeofday(&tstart, NULL);
+  FILE *file = fopen("cholesky_10000_t.in", "r");
+  fscanf(file, "%d", &n);
 
-    t_generate = (tend.tv_sec - tstart.tv_sec) + (tend.tv_usec - tstart.tv_usec) / 1000000.0;
-    printf("Generate: %fs\n",t_generate);
-    //--------------------------------------------
+  double **A = mat_new(n);
+  mat_gen(file, A, n);
+  fclose(file);
+  gettimeofday(&tend, NULL);
 
-    //---------------Solve Cholesky---------------
-    gettimeofday(&tstart, NULL);
-    cholesky(A, n);
-    gettimeofday(&tend, NULL);
+  t_generate = (tend.tv_sec - tstart.tv_sec) + (tend.tv_usec - tstart.tv_usec) / 1000000.0;
+  printf("Generate: %fs    ", t_generate);
+  //--------------------------------------------
 
-    t_solve = (tend.tv_sec - tstart.tv_sec) + (tend.tv_usec - tstart.tv_usec) / 1000000.0;
-    printf("Solve: %fs\n", t_solve);
-    //---------------------------------------------
+  //---------------Solve Cholesky---------------
+  gettimeofday(&tstart, NULL);
+  cholesky(A, n);
+  gettimeofday(&tend, NULL);
 
-    //---------------Register Matrix---------------
-    gettimeofday(&tstart, NULL);
-    show_matrix(A, n);
+  t_solve = (tend.tv_sec - tstart.tv_sec) + (tend.tv_usec - tstart.tv_usec) / 1000000.0;
+  printf("Solve: %fs    ", t_solve);
+  //---------------------------------------------
 
-    mat_del(A);
-    gettimeofday(&tend, NULL);
+  //---------------Register Matrix---------------
+  gettimeofday(&tstart, NULL);
+  show_matrix(A, n);
 
-    t_register = (tend.tv_sec - tstart.tv_sec) + (tend.tv_usec - tstart.tv_usec) / 1000000.0;
-    printf("Register: %fs\n", t_register);
-    //---------------------------------------------
+  mat_del(A);
+  gettimeofday(&tend, NULL);
 
-    printf("\nExecucao finalizada (numero %d).\n\n\n",i+1);
-    i++;
-  }
+  t_register = (tend.tv_sec - tstart.tv_sec) + (tend.tv_usec - tstart.tv_usec) / 1000000.0;
+  printf("Register: %fs", t_register);
+  //---------------------------------------------
+
+  printf("\nExecucao finalizada\n");
   return 0;
 }
