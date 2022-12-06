@@ -1,0 +1,11 @@
+export OMP_NUM_THREADS=4
+gcc -o cholesky cholesky.c -fopenmp -lm
+./cholesky
+
+
+gcc -Wall cholesky_10x.c -c -o cholesky_10x.o
+gcc -Wall cholesky_10x.o -o cholesky_10x -lm
+./cholesky_10x
+
+gcc -o cholesky cholesky.c -lm
+./cholesky

@@ -16,7 +16,7 @@ for i in range (0,n):
       mat[i][j] = mat[i-m][i-m] + random.randint(5.0, 25.0) * 15
     else:
       mat[i][j] = random.randint(5.0, 25.0)
-      mat[j][i] = random.randint(5.0, 25.0)
+      mat[j][i] = mat[i][j]
 
 file = open(os.path.join(base_path, 'output_10000.txt'), 'w')
 file.write(f'{n}\n')
