@@ -1,0 +1,9 @@
+mpicc -o cholesky cholesky.c -lm
+mpirun -np 2 ./cholesky
+
+
+Caso der na execução:
+export OMPI_MCA_plm_rsh_agent=
+
+mpicc -o testMat testMat.c
+mpirun -np 2 ./testMat
