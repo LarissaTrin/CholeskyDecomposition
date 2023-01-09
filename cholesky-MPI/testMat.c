@@ -99,28 +99,25 @@ int main(int argc, char *argv[]){
         // print_mat(A,n,my_rank);
     }
     // 
+    print_mat(A,n,my_rank);
 
+    // mandar um vetor de dados em vez de 1 por 1
     // envia valor A para todos os processos OKAY
-    if (my_rank == 0)
-    {
-        for (int i = 1; i < p; i++)
-        {
-            MPI_Send(&(A[0][0]), (n + n)*n, MPI_DOUBLE, i, 0, MPI_COMM_WORLD);
-        }
-        // printMat(local_A, n);
-    }
-    else
-    {
-        MPI_Recv(&(A[0][0]), (n + n)*n, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD, &status);
-        // printMat(local_A, n);
-    }
+    // if (my_rank == 0)
+    // {
+    //     for (int i = 1; i < p; i++)
+    //     {
+    //         MPI_Send(&(A[0][0]), (n + n)*n, MPI_DOUBLE, i, 0, MPI_COMM_WORLD);
+    //     }
+    //     // printMat(local_A, n);
+    // }
+    // else
+    // {
+    //     MPI_Recv(&(A[0][0]), (n + n)*n, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD, &status);
+    //     // printMat(local_A, n);
+    // }
 
-    // n_bar = round(((n-1)-0) / p);
-    // inicio = calc_inicio(n_bar, 0, my_rank);
-	// printf("inicio: %d\n",inicio);
-	// fim = calc_fim(n_bar, n, 0, p, my_rank);
-    // printf("fim: %d\n\n",fim);
-
+    // mandar um vetor de dados em vez de 1 por 1
     //enviar a coluna inteira atraves do for
     // for (int i = 0; i < n; i++)
     // {
@@ -131,6 +128,22 @@ int main(int argc, char *argv[]){
     //         MPI_Recv(&A[i][0], 1, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD, &status);
     //     }
     // }
+
+
+    // mandar um vetor de dados em vez de 1 por 1
+    //enviar a linha inteira especifica
+    // if (my_rank==0)
+    // {
+    //   MPI_Send(&(A[1][0]), 1*n, MPI_DOUBLE, 1, 0, MPI_COMM_WORLD);
+    // } else {
+    //   MPI_Recv(&(A[1][0]),1*n, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD, &status);
+    // }
+
+    n_bar = round(((n-1)-0) / p);
+    inicio = calc_inicio(n_bar, 0, my_rank);
+	  // printf("inicio: %d\n",inicio);
+	  fim = calc_fim(n_bar, n, 0, p, my_rank);
+    // printf("fim: %d\n\n",fim);
     
     // envia a colula em quantidade de linhas especificas
     // if (my_rank!=0){
@@ -152,8 +165,32 @@ int main(int argc, char *argv[]){
     //         }
     //     }
     // }
+
+    // envia a linha em quantidade de linhas especificas
+    MPI_Barrier(MPI_COMM_WORLD);
+    if (my_rank!=0){
+        // printf("\nENVIANDO para 0\n");
+        MPI_Send(&A[0][inicio], (fim-inicio+1), MPI_DOUBLE, 0, 0, MPI_COMM_WORLD);
+        // printf("\nEnviado para 0\n");
+    } else {
+        // printf("\nTo em 0\n");
+        for (int k = 1; k < p; k++)
+        {
+            // printf("\nTo em 0.1\n");
+            inicio = calc_inicio(n_bar, 0, k);
+			      fim = calc_fim(n_bar, n, 0, p, k);
+            // printf("\nTo em 0.2\n");
+            MPI_Recv(&A[0][inicio], (fim-inicio+1), MPI_DOUBLE, k, 0, MPI_COMM_WORLD, &status);
+            // print_mat(A,n,my_rank);
+        }
+    }
+    MPI_Barrier(MPI_COMM_WORLD);
+    if (my_rank==0)
+    {
+      print_mat(A,n,my_rank);
+    }
     
-    print_mat(A,n,my_rank);
+    // print_mat(A,n,my_rank);
     
     MPI_Barrier(MPI_COMM_WORLD); /* Timing */
     MPI_Finalize();
