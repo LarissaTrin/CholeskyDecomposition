@@ -88,6 +88,22 @@ double **mat_aloc(int n)
   return x;
 }
 
+// double **mat_aloc(int n)
+// {
+//   int i;
+//   double **x = malloc(sizeof(double *) * n);
+//   assert(x != NULL);
+//   x[0] = malloc(n * n * sizeof(double));
+
+//   for (i = 0; i < n; i++)
+//   {
+//     x[i] = x[0] + i * n;
+//     assert(x[i] != NULL);
+//   }
+
+//   return x;
+// }
+
 void mat_gen(FILE *file, double **s, int n)
 {
   int i, j;
@@ -158,7 +174,7 @@ int main(int argc, char **argv)
   if (my_rank == 0)
   {
     // pega a dimensao da matriz (n) e a matriz A
-    file = fopen("cholesky.in", "r");
+    file = fopen("cholesky_1000.in", "r");
     fscanf(file, "%d", &n);
     ;
   }
@@ -174,23 +190,25 @@ int main(int argc, char **argv)
   // printf("p = %d\n",my_rank); //OKAY
 
   // envia valor A para todos os processos OKAY
-  if (my_rank == 0)
-  {
-    for (int i = 1; i < p; i++)
-    {
-      MPI_Send(&(local_A[0][0]), (n + n) * n, MPI_DOUBLE, i, 0, MPI_COMM_WORLD);
-    }
-    // printMat(local_A, n,my_rank);
-  }
-  else
-  {
-    MPI_Recv(&(local_A[0][0]), (n + n) * n, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD, &status);
-    // printMat(local_A, n,my_rank);
-  }
+  // if (my_rank == 0)
+  // {
+  //   for (int i = 1; i < p; i++)
+  //   {
+  //     MPI_Send(&(local_A[0][0]), (n + n) * n, MPI_DOUBLE, i, 0, MPI_COMM_WORLD);
+  //   }
+  //   // printMat(local_A, n,my_rank);
+  // }
+  // else
+  // {
+  //   MPI_Recv(&(local_A[0][0]), (n + n) * n, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD, &status);
+  //   // printMat(local_A, n,my_rank);
+  // }
+
+  // MPI_Bcast(&local_A[0][0], (n * n), MPI_DOUBLE, 0, MPI_COMM_WORLD);
 
   //----------------------------------------------
   //------------------Solve Cholesky--------------
-  MPI_Barrier(MPI_COMM_WORLD); /* Timing */
+  // MPI_Barrier(MPI_COMM_WORLD); /* Timing */
   if (my_rank == 0)
   {
     gettimeofday(&tstart, NULL);
@@ -210,7 +228,13 @@ int main(int argc, char **argv)
       local_A[i][i] = sqrt(local_A[i][i] - s);
     }
 
-    MPI_Bcast(local_A[i], n, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+    // MPI_Bcast(&local_A[i][i], 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+    MPI_Bcast(local_A[0], (n + n-2)*n, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+
+    // if (my_rank != 0)
+    // {
+    //   printMat(local_A, n, my_rank);
+    // }
     // printMat(local_A, n,my_rank);
 
     // printf("COLUNA: %d   my_rank = %d\n",i,my_rank);
@@ -220,68 +244,71 @@ int main(int argc, char **argv)
     // printf("inicio: %d\n",inicio);
     fim = calc_fim(n_bar, n, i, p, my_rank);
     // printf("fim: %d\n\n",fim);
-    MPI_Barrier(MPI_COMM_WORLD); /* Timing */
-    if (inicio <= fim)
-    {
-      // printf("COLUNA: %d   my_rank = %d\n", i, my_rank);
-      // printf("     inicio: %d   fim: %d\n", inicio, fim);
-      for (j = inicio; j <= fim; j++)
-      { // linha
-        // if (j < inicio && j > fim) {
-        s = 0;
-        for (k = 0; k < i; k++)
-        {
-          s += local_A[j][k] * local_A[i][k];
-        }
-        local_A[j][i] = (1.0 / local_A[i][i] * (local_A[j][i] - s));
-        // local_A[i][j] = local_A[j][i];
-        // }
-
-        // MPI_Bcast(local_A[j], n, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-        local_A[i][j] = local_A[j][i];
+    // MPI_Barrier(MPI_COMM_WORLD); /* Timing */
+    for (j = inicio; j <= fim; j++)
+    { // linha
+      // if (j < inicio && j > fim) {
+      s = 0;
+      for (k = 0; k < i; k++)
+      {
+        s += local_A[j][k] * local_A[i][k];
       }
+      local_A[j][i] = (1.0 / local_A[i][i] * (local_A[j][i] - s));
+      // local_A[i][j] = local_A[j][i];
+      // }
+
+      // MPI_Bcast(local_A[j], n, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+      local_A[i][j] = local_A[j][i];
     }
+
+    // if (inicio <= fim)
+    // {
+      
+    // }
 
     if (my_rank != 0)
-    {
-      // printMat(local_A, n, my_rank);
-      MPI_Send(&local_A[i][inicio], (fim-inicio+1), MPI_DOUBLE, 0, 0, MPI_COMM_WORLD);
-    }
-    else
-    {
-      // printMat(local_A, n, my_rank);
-      for (int k = 1; k < p; k++)
       {
-        inicio = calc_inicio(n_bar, i, k);
-        fim = calc_fim(n_bar, n, i, p, k);
-        MPI_Recv(&local_A[i][inicio], (fim-inicio+1), MPI_DOUBLE, k, 0, MPI_COMM_WORLD, &status);
         // printMat(local_A, n, my_rank);
-        for (int x = inicio; x <= fim; x++)
+        MPI_Send(&local_A[i][inicio], (fim - inicio + 1), MPI_DOUBLE, 0, 0, MPI_COMM_WORLD);
+      }
+      else
+      {
+        // printMat(local_A, n, my_rank);
+        for (int k = 1; k < p; k++)
         {
-          local_A[x][i] = local_A[i][x];
+          inicio = calc_inicio(n_bar, i, k);
+          fim = calc_fim(n_bar, n, i, p, k);
+          MPI_Recv(&local_A[i][inicio], (fim - inicio + 1), MPI_DOUBLE, k, 0, MPI_COMM_WORLD, &status);
+          // printMat(local_A, n, my_rank);
+          for (int x = inicio; x <= fim; x++)
+          {
+            local_A[x][i] = local_A[i][x];
+          }
+          // printMat(local_A, n, my_rank);
         }
-        // printMat(local_A, n, my_rank);
       }
-      
-    }
-    MPI_Barrier(MPI_COMM_WORLD); /* Timing */
+
+    // MPI_Barrier(MPI_COMM_WORLD); /* Timing */
+
+    // MPI_Bcast(&local_A[0][0], (n * n), MPI_DOUBLE, 0, MPI_COMM_WORLD);
+
     // envia valor A para todos os processos OKAY
-    if (my_rank == 0)
-    {
-      for (int i = 1; i < p; i++)
-      {
-        MPI_Send(&(local_A[0][0]), (n + n) * n, MPI_DOUBLE, i, 0, MPI_COMM_WORLD);
-      }
-      // printMat(local_A, n);
-    }
-    else
-    {
-      MPI_Recv(&(local_A[0][0]), (n + n) * n, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD, &status);
-      // printMat(local_A, n);
-    }
+    // if (my_rank == 0)
+    // {
+    //   for (int i = 1; i < p; i++)
+    //   {
+    //     MPI_Send(&(local_A[0][0]), (n + n) * n, MPI_DOUBLE, i, 0, MPI_COMM_WORLD);
+    //   }
+    //   // printMat(local_A, n);
+    // }
+    // else
+    // {
+    //   MPI_Recv(&(local_A[0][0]), (n + n) * n, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD, &status);
+    //   // printMat(local_A, n);
+    // }
   }
 
-  MPI_Barrier(MPI_COMM_WORLD); /* Timing */
+  // MPI_Barrier(MPI_COMM_WORLD); /* Timing */
 
   if (my_rank == 0)
   {
@@ -295,13 +322,13 @@ int main(int argc, char **argv)
     show_matrix(local_A, n);
     //---------------------------------------------
   }
-  
+
   // if (my_rank==1)
   // {
   //     show_matrix(local_A, n);
   // }
-  
-  printf("\nExecucao finalizada %d\n",my_rank);
+
+  printf("\nExecucao finalizada %d\n", my_rank);
   mat_del(local_A);
   MPI_Finalize();
   return 0;

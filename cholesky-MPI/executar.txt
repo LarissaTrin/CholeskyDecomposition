@@ -7,3 +7,6 @@ export OMPI_MCA_plm_rsh_agent=
 
 mpicc -o testMat testMat.c
 mpirun -np 2 ./testMat
+
+mpicc -o testecho testecho.c -lm
+mpirun -np 2 ./testecho
