@@ -10,3 +10,5 @@ mpirun -np 2 ./testMat
 
 mpicc -o testecho testecho.c -lm
 mpirun -np 2 ./testecho
+mpirun --oversubscribe -np 3 ./testecho
+mpirun --oversubscribe -np 4 ./testecho

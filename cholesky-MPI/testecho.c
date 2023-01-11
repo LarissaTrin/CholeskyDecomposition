@@ -126,7 +126,7 @@ int main(int argc, char **argv)
   if (my_rank == 0)
   {
     // pega a dimensao da matriz (n) e a matriz A
-    file = fopen("cholesky_1000.in", "r");
+    file = fopen("cholesky_10000.in", "r");
     fscanf(file, "%d", &n);
     ;
   }
